@@ -26,7 +26,7 @@ if archivo is not None:
             col_num = st.selectbox("📊 Seleccioná la columna numérica a cuartilizar:", columnas_numericas)
 
             # Checkbox para invertir cuartiles
-            invertir = st.checkbox("🔄 Invertir orden de cuartiles (Q4 es mejor que Q1)")
+            invertir = st.checkbox("🔄 Invertir orden de cuartiles (Dependiendo la métrica, por defecto Q4 para valores altos)")
 
             if st.button("📈 Calcular Cuartiles"):
                 # Etiquetas según si se invierten o no
