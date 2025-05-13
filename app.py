@@ -25,22 +25,38 @@ if archivo is not None:
             col_id = st.selectbox("🆔 Seleccioná la columna identificadora (por ejemplo: nombre del colaborador):", columnas_totales)
             col_num = st.selectbox("📊 Seleccioná la columna numérica a cuartilizar:", columnas_numericas)
 
-            if st.button("📈 Calcular Cuartiles"):
-                # Calcular cuartiles con pandas qcut
-                cuartiles, intervalos = pd.qcut(df[col_num], q=4, labels=["Q1", "Q2", "Q3", "Q4"], retbins=True)
+            # Checkbox para invertir cuartiles
+            invertir = st.checkbox("🔄 Invertir orden de cuartiles (Q4 es mejor que Q1)")
 
-                # Crear nuevo dataframe con solo lo necesario
+            if st.button("📈 Calcular Cuartiles"):
+                # Etiquetas según si se invierten o no
+                etiquetas = ["Q1", "Q2", "Q3", "Q4"]
+                if invertir:
+                    etiquetas = etiquetas[::-1]  # ["Q4", "Q3", "Q2", "Q1"]
+
+                # Calcular cuartiles y los intervalos
+                cuartiles, intervalos = pd.qcut(df[col_num], q=4, labels=etiquetas, retbins=True)
+
+                # Convertir intervalos a texto legible con 2 decimales
+                def format_interval(valor):
+                    left = round(valor.left, 2)
+                    right = round(valor.right, 2)
+                    return f"({left}, {right}]"
+
+                intervalos_str = pd.cut(df[col_num], bins=intervalos).apply(format_interval)
+
+                # Crear dataframe de resultado
                 df_resultado = pd.DataFrame({
                     col_id: df[col_id],
                     col_num: df[col_num],
                     "Cuartil": cuartiles,
-                    "Intervalo": pd.cut(df[col_num], bins=intervalos)
+                    "Intervalo": intervalos_str
                 })
 
                 st.success("✅ Cuartiles calculados.")
                 st.dataframe(df_resultado)
 
-                # Preparar archivo para descarga
+                # Exportar Excel
                 buffer = io.BytesIO()
                 with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
                     df_resultado.to_excel(writer, index=False, sheet_name="Resultados")
