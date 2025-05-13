@@ -5,7 +5,7 @@ import io
 st.set_page_config(page_title="Asignador de Cuartiles", layout="centered")
 
 st.title("📊 Asignador de Cuartiles")
-st.markdown("Subí un archivo `.xlsx`, seleccioná una columna numérica, y calcularemos los cuartiles automáticamente.")
+st.markdown("Subí un archivo `.xlsx`, seleccioná una columna identificadora y una columna numérica para cuartilizar.")
 
 # Subida de archivo
 archivo = st.file_uploader("📂 Subí tu archivo Excel (.xlsx)", type=["xlsx"])
@@ -17,21 +17,33 @@ if archivo is not None:
         st.dataframe(df.head())
 
         columnas_numericas = df.select_dtypes(include="number").columns.tolist()
+        columnas_totales = df.columns.tolist()
 
         if not columnas_numericas:
             st.warning("⚠️ El archivo no tiene columnas numéricas para calcular cuartiles.")
         else:
-            columna = st.selectbox("📌 Seleccioná la columna para calcular cuartiles:", columnas_numericas)
+            col_id = st.selectbox("🆔 Seleccioná la columna identificadora (por ejemplo: nombre del colaborador):", columnas_totales)
+            col_num = st.selectbox("📊 Seleccioná la columna numérica a cuartilizar:", columnas_numericas)
 
             if st.button("📈 Calcular Cuartiles"):
-                df["Cuartil"] = pd.qcut(df[columna], q=4, labels=["Q1", "Q2", "Q3", "Q4"])
-                st.success("✅ Cuartiles calculados.")
-                st.dataframe(df[[columna, "Cuartil"]])
+                # Calcular cuartiles con pandas qcut
+                cuartiles, intervalos = pd.qcut(df[col_num], q=4, labels=["Q1", "Q2", "Q3", "Q4"], retbins=True)
 
-                # Descargar resultado
+                # Crear nuevo dataframe con solo lo necesario
+                df_resultado = pd.DataFrame({
+                    col_id: df[col_id],
+                    col_num: df[col_num],
+                    "Cuartil": cuartiles,
+                    "Intervalo": pd.cut(df[col_num], bins=intervalos)
+                })
+
+                st.success("✅ Cuartiles calculados.")
+                st.dataframe(df_resultado)
+
+                # Preparar archivo para descarga
                 buffer = io.BytesIO()
                 with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-                    df.to_excel(writer, index=False, sheet_name="Resultados")
+                    df_resultado.to_excel(writer, index=False, sheet_name="Resultados")
                 st.download_button(
                     label="📥 Descargar Excel con Cuartiles",
                     data=buffer.getvalue(),
