@@ -37,10 +37,13 @@ if archivo is not None:
                 # Calcular cuartiles y los intervalos
                 cuartiles, intervalos = pd.qcut(df[col_num], q=4, labels=etiquetas, retbins=True)
 
+                # Redondear valores originales a 2 decimales
+                col_numerica_redondeada = df[col_num].round(2)
+
                 # Convertir intervalos a texto legible con 2 decimales
                 def format_interval(valor):
-                    left = round(valor.left, 2)
-                    right = round(valor.right, 2)
+                    left = f"{valor.left:.2f}".replace('.', ',')
+                    right = f"{valor.right:.2f}".replace('.', ',')
                     return f"({left}, {right}]"
 
                 intervalos_str = pd.cut(df[col_num], bins=intervalos).apply(format_interval)
@@ -48,7 +51,7 @@ if archivo is not None:
                 # Crear dataframe de resultado
                 df_resultado = pd.DataFrame({
                     col_id: df[col_id],
-                    col_num: df[col_num],
+                    col_num: col_numerica_redondeada,
                     "Cuartil": cuartiles,
                     "Intervalo": intervalos_str
                 })
