@@ -1,0 +1,35 @@
+# Entorno virtual
+venv/
+.env/
+ENV/
+env/
+.venv/
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Archivos de logs
+*.log
+
+# Archivos de Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Archivos de sistema (Windows / macOS / Linux)
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos de salida (como Excel generados localmente)
+*.xlsx
+*.xls
+*.csv
+
+# Streamlit cache
+.streamlit/
+
+# Archivos de configuración de editor
+.vscode/
+.idea/
