@@ -28,58 +28,55 @@ if archivo is not None:
         if not columnas_numericas:
             st.warning("⚠️ El archivo no tiene columnas numéricas para calcular cuartiles.")
         else:
-            col_id = st.selectbox("🆔 Seleccioná la columna identificadora (por ejemplo: nombre del colaborador):", columnas_totales)
-            col_num = st.selectbox("📊 Seleccioná la columna numérica a cuartilizar:", columnas_numericas)
+            col_ids = st.multiselect("🆔 Seleccioná una o más columnas identificadoras (por ejemplo: asesor, líder):", columnas_totales)
+            col_nums = st.multiselect("📊 Seleccioná una o más columnas numéricas a cuartilizar:", columnas_numericas)
 
-            invertir = st.checkbox("🔄 Invertir orden de cuartiles (Q4 es mejor que Q1)")
+            invertir = st.checkbox("🔄 Invertir cuartiles (valores altos corresponden a Q4)")
 
             if st.button("📈 Calcular Cuartiles"):
-                valores = df[col_num].dropna()
+                df_resultado = df[col_ids].copy()  # arrancamos con identificadores
 
-                # Obtener percentiles como en Excel (PERCENTIL.EXC)
-                p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
+                for col in col_nums:
+                    valores = df[col].dropna()
+                    p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
+                    col_redondeada = df[col].round(2)
 
-                # Redondear la columna original
-                df[col_num] = df[col_num].round(2)
+                    # Asignar cuartil
+                    def clasificar(v):
+                        if pd.isna(v): return None
+                        if v >= p75: return "Q1"
+                        elif v >= p50: return "Q2"
+                        elif v >= p25: return "Q3"
+                        else: return "Q4"
 
-                # Asignar cuartiles al estilo Excel
-                def clasificar(v):
-                    if pd.isna(v): return None
-                    if v >= p75: return "Q1"
-                    elif v >= p50: return "Q2"
-                    elif v >= p25: return "Q3"
-                    else: return "Q4"
+                    cuartil = col_redondeada.apply(clasificar)
 
-                cuartiles = df[col_num].apply(clasificar)
+                    # Invertir cuartil si se tilda
+                    if invertir:
+                        cuartil = cuartil.replace({
+                            "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
+                        })
 
-                if invertir:
-                    cuartiles = cuartiles.replace({
-                        "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
-                    })
+                    # Intervalo
+                    def calcular_intervalo(v):
+                        if pd.isna(v): return None
+                        if v >= p75:
+                            return f"[{round(p75,2)}, máx]"
+                        elif v >= p50:
+                            return f"[{round(p50,2)}, {round(p75,2)})"
+                        elif v >= p25:
+                            return f"[{round(p25,2)}, {round(p50,2)})"
+                        else:
+                            return f"[mín, {round(p25,2)})"
 
-                # Generar intervalo legible
-                def calcular_intervalo(v):
-                    if pd.isna(v): return None
-                    if v >= p75:
-                        return f"[{round(p75,2)}, máx]"
-                    elif v >= p50:
-                        return f"[{round(p50,2)}, {round(p75,2)})"
-                    elif v >= p25:
-                        return f"[{round(p25,2)}, {round(p50,2)})"
-                    else:
-                        return f"[mín, {round(p25,2)})"
+                    intervalo = df[col].apply(calcular_intervalo)
 
-                intervalos = df[col_num].apply(calcular_intervalo)
+                    # Agregar columnas al resultado
+                    df_resultado[col] = col_redondeada
+                    df_resultado[f"{col}_Cuartil"] = cuartil
+                    df_resultado[f"{col}_Intervalo"] = intervalo
 
-                # Armar resultado final
-                df_resultado = pd.DataFrame({
-                    col_id: df[col_id],
-                    col_num: df[col_num],
-                    "Cuartil": cuartiles,
-                    "Intervalo": intervalos
-                })
-
-                st.success("✅ Cuartiles asignados al estilo Excel (PERCENTIL.EXC)")
+                st.success("✅ Cuartiles calculados para todas las columnas seleccionadas.")
                 st.dataframe(df_resultado)
 
                 # Exportar a Excel
@@ -89,7 +86,7 @@ if archivo is not None:
                 st.download_button(
                     label="📥 Descargar Excel con Cuartiles",
                     data=buffer.getvalue(),
-                    file_name="resultado_cuartiles.xlsx",
+                    file_name="resultado_cuartiles_multiples.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
