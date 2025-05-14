@@ -68,17 +68,18 @@ if archivo is not None:
 
                     def clasificar(v):
                         if pd.isna(v): return None
-                        if v >= p75: return "Q1"
-                        elif v >= p50: return "Q2"
-                        elif v >= p25: return "Q3"
-                        else: return "Q4"
+                        if v >= p75: return "Q4"
+                        elif v >= p50: return "Q3"
+                        elif v >= p25: return "Q2"
+                        else: return "Q1"
 
                     cuartil = col_red.apply(clasificar)
 
                     if invertir:
                         cuartil = cuartil.replace({
-                            "Q4": "Q1", "Q3": "Q2", "Q2": "Q3", "Q1": "Q4"
+                            "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
                         })
+
 
                     def intervalo(v):
                         if pd.isna(v): return None
