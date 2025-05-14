@@ -1,11 +1,17 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import io
 
 st.set_page_config(page_title="Asignador de Cuartiles", layout="centered")
 
 st.title("📊 Asignador de Cuartiles")
 st.markdown("Subí un archivo `.xlsx`, seleccioná una columna identificadora y una columna numérica para cuartilizar.")
+
+# Botón de reinicio
+if st.button("🔁 Reiniciar aplicación"):
+    st.cache_data.clear()
+    st.experimental_rerun()
 
 # Subida de archivo
 archivo = st.file_uploader("📂 Subí tu archivo Excel (.xlsx)", type=["xlsx"])
@@ -25,41 +31,58 @@ if archivo is not None:
             col_id = st.selectbox("🆔 Seleccioná la columna identificadora (por ejemplo: nombre del colaborador):", columnas_totales)
             col_num = st.selectbox("📊 Seleccioná la columna numérica a cuartilizar:", columnas_numericas)
 
-            # Checkbox para invertir cuartiles
-            invertir = st.checkbox("🔄 Invertir orden de cuartiles (Dependiendo la métrica, por defecto Q4 para valores altos)")
+            invertir = st.checkbox("🔄 Invertir orden de cuartiles (Q4 es mejor que Q1)")
 
             if st.button("📈 Calcular Cuartiles"):
-                # Etiquetas según si se invierten o no
-                etiquetas = ["Q1", "Q2", "Q3", "Q4"]
+                valores = df[col_num].dropna()
+
+                # Obtener percentiles como en Excel (PERCENTIL.EXC)
+                p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
+
+                # Redondear la columna original
+                df[col_num] = df[col_num].round(2)
+
+                # Asignar cuartiles al estilo Excel
+                def clasificar(v):
+                    if pd.isna(v): return None
+                    if v >= p75: return "Q1"
+                    elif v >= p50: return "Q2"
+                    elif v >= p25: return "Q3"
+                    else: return "Q4"
+
+                cuartiles = df[col_num].apply(clasificar)
+
                 if invertir:
-                    etiquetas = etiquetas[::-1]  # ["Q4", "Q3", "Q2", "Q1"]
+                    cuartiles = cuartiles.replace({
+                        "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
+                    })
 
-                # Calcular cuartiles y los intervalos
-                cuartiles, intervalos = pd.qcut(df[col_num], q=4, labels=etiquetas, retbins=True)
+                # Generar intervalo legible
+                def calcular_intervalo(v):
+                    if pd.isna(v): return None
+                    if v >= p75:
+                        return f"[{round(p75,2)}, máx]"
+                    elif v >= p50:
+                        return f"[{round(p50,2)}, {round(p75,2)})"
+                    elif v >= p25:
+                        return f"[{round(p25,2)}, {round(p50,2)})"
+                    else:
+                        return f"[mín, {round(p25,2)})"
 
-                # Redondear valores originales a 2 decimales
-                col_numerica_redondeada = df[col_num].round(2)
+                intervalos = df[col_num].apply(calcular_intervalo)
 
-                # Convertir intervalos a texto legible con 2 decimales
-                def format_interval(valor):
-                    left = f"{valor.left:.2f}".replace('.', ',')
-                    right = f"{valor.right:.2f}".replace('.', ',')
-                    return f"({left}, {right}]"
-
-                intervalos_str = pd.cut(df[col_num], bins=intervalos).apply(format_interval)
-
-                # Crear dataframe de resultado
+                # Armar resultado final
                 df_resultado = pd.DataFrame({
                     col_id: df[col_id],
-                    col_num: col_numerica_redondeada,
+                    col_num: df[col_num],
                     "Cuartil": cuartiles,
-                    "Intervalo": intervalos_str
+                    "Intervalo": intervalos
                 })
 
-                st.success("✅ Cuartiles calculados.")
+                st.success("✅ Cuartiles asignados al estilo Excel (PERCENTIL.EXC)")
                 st.dataframe(df_resultado)
 
-                # Exportar Excel
+                # Exportar a Excel
                 buffer = io.BytesIO()
                 with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
                     df_resultado.to_excel(writer, index=False, sheet_name="Resultados")
