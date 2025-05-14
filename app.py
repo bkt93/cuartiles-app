@@ -41,7 +41,7 @@ if archivo is not None:
                 key=f"colnum_{i}"
             )
             st.session_state.grupos[i]["invertir"] = st.checkbox(
-                "Invertir cuartiles (valores altos → Q4)",
+                "Asignar Q1 a valores altos (NPS, SAT, etc)",
                 value=grupo["invertir"],
                 key=f"invertir_{i}"
             )
@@ -75,9 +75,11 @@ if archivo is not None:
                     cuartil = col_red.apply(clasificar)
 
                     if invertir:
+                        # Si se tilda el checkbox: queremos que Q1 represente valores altos
                         cuartil = cuartil.replace({
-                            "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
+                            "Q4": "Q1", "Q3": "Q2", "Q2": "Q3", "Q1": "Q4"
                         })
+
 
                     def intervalo(v):
                         if pd.isna(v): return None
