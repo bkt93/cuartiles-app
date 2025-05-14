@@ -41,7 +41,7 @@ if archivo is not None:
                 key=f"colnum_{i}"
             )
             st.session_state.grupos[i]["invertir"] = st.checkbox(
-                "Asignar Q1 a valores altos (NPS, SAT, etc)",
+                "Asignar Q1 a valores altos → NPS, SAT, etc",
                 value=grupo["invertir"],
                 key=f"invertir_{i}"
             )
