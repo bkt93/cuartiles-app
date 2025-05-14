@@ -77,7 +77,7 @@ if archivo is not None:
 
                     if invertir:
                         cuartil = cuartil.replace({
-                            "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
+                            "Q4": "Q1", "Q3": "Q2", "Q2": "Q3", "Q1": "Q4"
                         })
 
                     def intervalo(v):
