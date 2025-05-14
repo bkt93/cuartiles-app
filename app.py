@@ -5,15 +5,14 @@ import io
 
 st.set_page_config(page_title="Asignador de Cuartiles", layout="centered")
 
-st.title("📊 Asignador de Cuartiles")
-st.markdown("Subí un archivo `.xlsx`, seleccioná una columna identificadora y una columna numérica para cuartilizar.")
+st.title("📊 Asignador de Cuartiles por Grupos de Métricas")
 
-# Botón de reinicio
+# Reinicio
 if st.button("🔁 Reiniciar aplicación"):
     st.cache_data.clear()
+    st.session_state.clear()
     st.experimental_rerun()
 
-# Subida de archivo
 archivo = st.file_uploader("📂 Subí tu archivo Excel (.xlsx)", type=["xlsx"])
 
 if archivo is not None:
@@ -22,26 +21,50 @@ if archivo is not None:
         st.success("Archivo cargado correctamente.")
         st.dataframe(df.head())
 
-        columnas_numericas = df.select_dtypes(include="number").columns.tolist()
         columnas_totales = df.columns.tolist()
+        columnas_numericas = df.select_dtypes(include="number").columns.tolist()
 
-        if not columnas_numericas:
-            st.warning("⚠️ El archivo no tiene columnas numéricas para calcular cuartiles.")
-        else:
-            col_ids = st.multiselect("🆔 Seleccioná una o más columnas identificadoras (por ejemplo: asesor, líder):", columnas_totales)
-            col_nums = st.multiselect("📊 Seleccioná una o más columnas numéricas a cuartilizar:", columnas_numericas)
+        # Selección de identificadores
+        col_ids = st.multiselect("🆔 Seleccioná columnas identificadoras (ej: asesor, líder):", columnas_totales)
 
-            invertir = st.checkbox("🔄 Invertir cuartiles (valores altos corresponden a Q4)")
+        # Inicializar grupos en session_state
+        if "grupos" not in st.session_state:
+            st.session_state.grupos = [{"columnas": [], "invertir": False}]
 
-            if st.button("📈 Calcular Cuartiles"):
-                df_resultado = df[col_ids].copy()  # arrancamos con identificadores
+        # Mostrar cada conjunto de métricas
+        for i, grupo in enumerate(st.session_state.grupos):
+            st.markdown(f"### 🔢 Grupo de métricas #{i+1}")
+            st.session_state.grupos[i]["columnas"] = st.multiselect(
+                f"Seleccioná columnas numéricas para el grupo #{i+1}",
+                columnas_numericas,
+                default=grupo["columnas"],
+                key=f"colnum_{i}"
+            )
+            st.session_state.grupos[i]["invertir"] = st.checkbox(
+                "Invertir cuartiles (valores altos → Q4)",
+                value=grupo["invertir"],
+                key=f"invertir_{i}"
+            )
+            st.markdown("---")
 
-                for col in col_nums:
+        # Botón para agregar más grupos
+        if st.button("➕ Agregar nuevo conjunto de métricas"):
+            st.session_state.grupos.append({"columnas": [], "invertir": False})
+
+        # Calcular cuartiles
+        if st.button("📈 Calcular Cuartiles"):
+            df_resultado = df[col_ids].copy() if col_ids else pd.DataFrame()
+
+            for idx, grupo in enumerate(st.session_state.grupos):
+                columnas = grupo["columnas"]
+                invertir = grupo["invertir"]
+
+                for col in columnas:
                     valores = df[col].dropna()
                     p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
-                    col_redondeada = df[col].round(2)
+                    col_red = df[col].round(2)
 
-                    # Asignar cuartil
+                    # Asignar cuartil estilo Excel
                     def clasificar(v):
                         if pd.isna(v): return None
                         if v >= p75: return "Q1"
@@ -49,46 +72,37 @@ if archivo is not None:
                         elif v >= p25: return "Q3"
                         else: return "Q4"
 
-                    cuartil = col_redondeada.apply(clasificar)
+                    cuartil = col_red.apply(clasificar)
 
-                    # Invertir cuartil si se tilda
                     if invertir:
                         cuartil = cuartil.replace({
                             "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
                         })
 
-                    # Intervalo
-                    def calcular_intervalo(v):
+                    def intervalo(v):
                         if pd.isna(v): return None
-                        if v >= p75:
-                            return f"[{round(p75,2)}, máx]"
-                        elif v >= p50:
-                            return f"[{round(p50,2)}, {round(p75,2)})"
-                        elif v >= p25:
-                            return f"[{round(p25,2)}, {round(p50,2)})"
-                        else:
-                            return f"[mín, {round(p25,2)})"
+                        if v >= p75: return f"[{round(p75,2)}, máx]"
+                        elif v >= p50: return f"[{round(p50,2)}, {round(p75,2)})"
+                        elif v >= p25: return f"[{round(p25,2)}, {round(p50,2)})"
+                        else: return f"[mín, {round(p25,2)})"
 
-                    intervalo = df[col].apply(calcular_intervalo)
-
-                    # Agregar columnas al resultado
-                    df_resultado[col] = col_redondeada
+                    df_resultado[col] = col_red
                     df_resultado[f"{col}_Cuartil"] = cuartil
-                    df_resultado[f"{col}_Intervalo"] = intervalo
+                    df_resultado[f"{col}_Intervalo"] = df[col].apply(intervalo)
 
-                st.success("✅ Cuartiles calculados para todas las columnas seleccionadas.")
-                st.dataframe(df_resultado)
+            st.success("✅ Cuartiles generados para todos los conjuntos.")
+            st.dataframe(df_resultado)
 
-                # Exportar a Excel
-                buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-                    df_resultado.to_excel(writer, index=False, sheet_name="Resultados")
-                st.download_button(
-                    label="📥 Descargar Excel con Cuartiles",
-                    data=buffer.getvalue(),
-                    file_name="resultado_cuartiles_multiples.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+            # Exportar resultado
+            buffer = io.BytesIO()
+            with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+                df_resultado.to_excel(writer, index=False, sheet_name="Resultados")
+            st.download_button(
+                label="📥 Descargar Excel con Cuartiles",
+                data=buffer.getvalue(),
+                file_name="resultado_cuartiles.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
