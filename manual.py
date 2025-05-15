@@ -1,64 +1,86 @@
-# manual.py
-
 import streamlit as st
 
 def mostrar_manual():
-    with st.expander("📘 Manual paso a paso - Cómo usar esta herramienta"):
-        st.markdown("""
+    st.markdown("""
+## 📘 Manual - Cómo usar esta herramienta
+
 ### 📊 ¿Qué hace esta herramienta?
-Este asignador de cuartiles permite subir un archivo Excel con datos numéricos y asignar cuartiles automáticos a distintas métricas.
+Este asignador de cuartiles permite subir un archivo Excel con datos numéricos y asignar cuartiles automáticos a distintas métricas. También permite **agregar filas de resumen** con sumatorias o promedios seleccionados.
+
+---
 
 ### ✅ ¿Qué necesito?
 1. Un archivo **.xlsx** que contenga:
-   - Columnas con **datos numéricos** (ej: NPS, SAT, ventas).
+   - Columnas con **datos numéricos** (ej: NPS, SAT, Ventas, TMO).
    - Opcionalmente, columnas identificadoras (como nombre del asesor o líder).
+
+---
 
 ### 🧩 ¿Cómo funciona?
 - Seleccionás una o más **columnas identificadoras** (por ejemplo, Asesor y Líder).
-- Luego hay **2 grupos** disponibles para analizar métricas:
+- Luego hay **2 grupos** para cuartilizar métricas:
   - En cada grupo seleccionás **una o más columnas numéricas**.
-  - Podés marcar si querés que **Q1 represente valores altos** (por ejemplo, en métricas como NPS, SAT, etc)
-  - Si no marcás nada, se considera que **Q4 representa los valores altos** (útil para métricas como TOL, TMO, %Auxiliares, etc)
+  - Podés marcar si querés que **Q1 represente valores altos** (por ejemplo, NPS, SAT).
+  - Si no marcás nada, se asume que **Q4 representa valores altos** (ej: TMO, TOL).
+
+---
+
+### 🧮 ¿Qué son las filas de resumen?
+Antes de calcular, podés configurar **dos filas de resumen**:
+
+- En cada fila:
+  - Elegís columnas numéricas para resumir.
+  - Elegís si querés mostrar su **Promedio** o **Sumatoria**.
+- Estas filas se agregarán automáticamente al final del Excel exportado.
+- Aparecen con fondo rojo y fuente en negrita.
+- El nombre de la fila indica el tipo: `Promedio` o `Sumatoria`.
+
+---
 
 ### 📈 ¿Qué hace el botón 'Calcular Cuartiles'?
 Cuando presionás este botón:
 
-- Se procesan todas las columnas numéricas seleccionadas.
-- Para cada métrica, se agregan **dos columnas nuevas**:
-  - `📌 _Cuartil`: indica en qué cuartil cae cada valor. Pueden ser:
-    - **Q1**: valores más bajos
-    - **Q4**: valores más altos
-    - (esto puede invertirse si marcás la opción correspondiente)
-  - `📌 _Intervalo`: muestra el rango exacto del cuartil.
+1. Se procesan los dos grupos de métricas.
+2. Para cada métrica, se agregan **dos columnas nuevas**:
+   - `🟢 _Cuartil`: indica si el valor está en Q1, Q2, Q3 o Q4.
+   - `🟡 _Intervalo`: muestra el rango de cada cuartil.
+3. Se agregan las **filas de resumen** que configuraste.
+4. Podés **descargar el Excel** completo con los resultados.
 
-#### 🔍 ¿Qué significan los intervalos?
+---
+
+### 🔍 ¿Qué significan los cuartiles e intervalos?
 Los intervalos se generan automáticamente dividiendo los datos en 4 partes iguales. Por ejemplo:
 
 - **Q1 →** `[mín, 424.25)` → Los valores más bajos (25%)
-- **Q2 →** `[424.25, 498.76)` → Segundo cuarto
-- **Q3 →** `[498.76, 570.01)` → Tercer cuarto
+- **Q2 →** `[424.25, 498.76)`
+- **Q3 →** `[498.76, 570.01)`
 - **Q4 →** `[570.01, máx]` → Los valores más altos (25%)
-
-Esto te permite no solo ver si un asesor está en Q2 o Q4, sino también **cuál es el rango real de valores** para cada cuartil.
 
 ---
 
 ### 📐 ¿Cómo se calculan los cuartiles?
-Esta app utiliza el método de cálculo equivalente a `PERCENTIL.EXC` en Excel:
-
-- Se basa en una lógica **estadística profesional** que excluye los valores extremos (0% y 100%).
-- Es ideal para comparar datos distribuidos de forma más realista.
-- Los puntos de corte (percentiles 25, 50 y 75) se calculan con la función `np.percentile(..., method="linear")` de forma precisa.
-
-### 📥 ¿Cómo obtengo el resultado?
-- Una vez calculado, podés descargar el archivo Excel listo para usar.
+- Se utiliza el método `PERCENTIL.EXC` como en Excel.
+- Se excluyen los extremos (0% y 100%) para mayor precisión.
+- Se implementa con `np.percentile(..., method="linear")`.
 
 ---
-                    
-### 📄 ¿Qué contiene la hoja "Intervalos" del Excel exportado?
-Además de los resultados cuartilizados por colaborador, el archivo Excel también incluye una hoja adicional llamada **"Intervalos"**.
-                    
-🟦 Métricas estándar (Q4 = valores altos, Q1 = valores bajos):
+
+### 📥 ¿Qué incluye el Excel descargado?
+1. **Hoja "Resultados"**:
+   - Datos con columnas cuartilizadas.
+   - Filas de resumen configuradas (Promedio / Sumatoria).
+   - Las filas de resumen están en **color rojo** para identificarlas fácilmente.
+
+2. **Hoja "Intervalos"**:
+   - Tabla con los rangos utilizados para cada cuartil.
+   - Se muestran tanto métricas estándar como invertidas.
+
+---
+
+### 📄 ¿Cómo interpretar la hoja "Intervalos"?
+
+🟦 Métricas estándar (Q4 = valores altos):
 
 | Métrica | Q1             | Q2                | Q3                | Q4             |
 | ------- | -------------- | ----------------- | ----------------- | -------------- |
@@ -66,24 +88,26 @@ Además de los resultados cuartilizados por colaborador, el archivo Excel tambi�
 | Tmo     | \[mín, 429.58) | \[429.58, 521.69) | \[521.69, 590.48) | \[590.48, máx] |
 
 🟩 Métricas invertidas (Q1 = valores altos, Q4 = valores bajos):
-                    
+
 | Métrica | Q1            | Q2              | Q3             | Q4           |
 | ------- | ------------- | --------------- | -------------- | ------------ |
 | Nps     | \[66.67, máx] | \[46.06, 66.67) | \[20.0, 46.06) | \[mín, 20.0) |
 | Sat     | \[9.81, máx]  | \[9.27, 9.81)   | \[8.18, 9.27)  | \[mín, 8.18) |
 
-🔎 Esta tabla te permite **consultar rápidamente los límites reales** que se usaron para asignar los cuartiles, sin necesidad de revisar todos los datos uno por uno.
-
-💡 Es útil si querés:
-- Interpretar cómo se calculó cada Q.
-- Replicar la lógica en otros sistemas o reportes.
-- Ver los puntos de corte por métrica de forma centralizada.
+💡 Esta tabla te permite interpretar rápidamente cómo se definieron los cuartiles para cada métrica.
 
 ---
-                    
-**Ejemplo de uso**:
-- Grupo 1 → TMO, TOL (sin marcar)
-- Grupo 2 → NPS, SAT (marcar Q1 como alto ✅)
 
-Así podés comparar todas las métricas con una escala homogénea de cuartiles.
+### ✨ Ejemplo de configuración sugerida
+
+- **Grupo 1:** TMO, TOL → (sin invertir)
+- **Grupo 2:** NPS, SAT → (invertido ✅)
+- **Resumen 1:** Promedio de TMO y TOL
+- **Resumen 2:** Sumatoria de llamadas
+
+Así podés:
+- Comparar métricas con escala homogénea.
+- Ver qué asesores están en qué cuartil.
+- Descargar un Excel listo para análisis o reportes.
+
 """)
