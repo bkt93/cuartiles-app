@@ -2,9 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import io
+from manual import mostrar_manual  
+from intervalos import construir_tabla_intervalos
+
 
 st.set_page_config(page_title="Asignador de Cuartiles", layout="centered")
-st.title("📊 Asignador de Cuartiles por Grupos de Métricas")
+st.title("📊 Calculadora de cuartiles")
+
+mostrar_manual()
 
 archivo = st.file_uploader("📂 Subí tu archivo Excel (.xlsx)", type=["xlsx"])
 
@@ -81,11 +86,14 @@ if archivo is not None:
 
             st.success("✅ Cuartiles generados para todos los conjuntos.")
             st.dataframe(df_resultado)
+            #  mostrar_resumen_en_pantalla(df_resultado)
+            df_intervalos = construir_tabla_intervalos(df, num_grupos)
 
             # Exportar a Excel
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
                 df_resultado.to_excel(writer, index=False, sheet_name="Resultados")
+                df_intervalos.to_excel(writer, index=False, sheet_name="Intervalos")
             st.download_button(
                 label="📥 Descargar Excel con Cuartiles",
                 data=buffer.getvalue(),
