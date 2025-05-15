@@ -30,7 +30,6 @@ if archivo is not None:
         # Antes del bucle
         grupos_actualizados = []
 
-        # Mostrar los grupos existentes
         for i in range(len(st.session_state.grupos)):
             st.markdown(f"### 🔢 Grupo de métricas #{i + 1}")
             grupo = st.session_state.grupos[i]
@@ -48,14 +47,15 @@ if archivo is not None:
                 key=f"invertir_{i}"
             )
 
-            st.session_state.grupos[i] = {
+            grupos_actualizados.append({
                 "columnas": columnas_seleccionadas,
                 "invertir": invertir_valor
-            }
+            })
 
             st.markdown("---")
 
-        st.session_state.grupos = grupos_actualizados 
+        # Guardamos solo después del loop
+        st.session_state.grupos = grupos_actualizados
 
         # Botón para calcular
         if st.button("📈 Calcular Cuartiles"):
