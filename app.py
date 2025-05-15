@@ -8,9 +8,13 @@ st.title("📊 Asignador de Cuartiles por Grupos de Métricas")
 
 archivo = st.file_uploader("📂 Subí tu archivo Excel (.xlsx)", type=["xlsx"])
 
-# Inicializar grupos
-if "grupos" not in st.session_state:
-    st.session_state.grupos = [{"columnas": [], "invertir": False}]
+# Inicializar exactamente 2 grupos
+if "grupos" not in st.session_state or len(st.session_state.grupos) != 2:
+    st.session_state.grupos = [
+        {"columnas": [], "invertir": False},
+        {"columnas": [], "invertir": False}
+    ]
+
 
 if archivo is not None:
     try:
@@ -48,10 +52,7 @@ if archivo is not None:
 
             st.markdown("---")
 
-        # Agregar nuevo grupo
-        if st.button("➕ Agregar nuevo conjunto de métricas"):
-            st.session_state.grupos.append({"columnas": [], "invertir": False})
-            st.experimental_rerun()
+        
 
         # Botón para calcular
         if st.button("📈 Calcular Cuartiles"):
@@ -109,9 +110,10 @@ if archivo is not None:
         # Botón de reinicio (al final)
         if st.button("🔁 Reiniciar aplicación"):
             st.cache_data.clear()
-            for key in st.session_state.keys():
+            for key in list(st.session_state.keys()):
                 del st.session_state[key]
-            st.experimental_rerun()
+            st.rerun()
+
 
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
