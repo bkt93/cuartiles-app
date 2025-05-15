@@ -27,6 +27,9 @@ if archivo is not None:
 
         col_ids = st.multiselect("🆔 Seleccioná columnas identificadoras (ej: asesor, líder):", columnas_totales)
 
+        # Antes del bucle
+        grupos_actualizados = []
+
         # Mostrar los grupos existentes
         for i in range(len(st.session_state.grupos)):
             st.markdown(f"### 🔢 Grupo de métricas #{i + 1}")
@@ -52,7 +55,7 @@ if archivo is not None:
 
             st.markdown("---")
 
-        
+        st.session_state.grupos = grupos_actualizados 
 
         # Botón para calcular
         if st.button("📈 Calcular Cuartiles"):
@@ -110,9 +113,9 @@ if archivo is not None:
         # Botón de reinicio (al final)
         if st.button("🔁 Reiniciar aplicación"):
             st.cache_data.clear()
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
+            st.session_state.clear()  # Esto borra todas las claves, incluido el archivo subido
             st.rerun()
+
 
 
     except Exception as e:
