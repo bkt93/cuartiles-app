@@ -122,10 +122,11 @@ if archivo is not None:
 
                     def intervalo(v):
                         if pd.isna(v): return None
-                        if v >= p75: return f"[{round(p75,2)}, máx]"
-                        elif v >= p50: return f"[{round(p50,2)}, {round(p75,2)})"
-                        elif v >= p25: return f"[{round(p25,2)}, {round(p50,2)})"
-                        else: return f"[mín, {round(p25,2)})"
+                        if v >= p75: return f"[{round(p75,5)}, máx]"
+                        elif v >= p50: return f"[{round(p50,5)}, {round(p75,5)})"
+                        elif v >= p25: return f"[{round(p25,5)}, {round(p50,5)})"
+                        else: return f"[mín, {round(p25,5)})"
+
 
                     df_resultado[col] = col_red
                     df_resultado[f"{col}_Cuartil"] = cuartil

@@ -17,10 +17,10 @@ def construir_tabla_intervalos(df, num_grupos):
             p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
 
             # Generar intervalos
-            intervalo_q1 = f"[mín, {round(p25,2)})"
-            intervalo_q2 = f"[{round(p25,2)}, {round(p50,2)})"
-            intervalo_q3 = f"[{round(p50,2)}, {round(p75,2)})"
-            intervalo_q4 = f"[{round(p75,2)}, máx]"
+            intervalo_q1 = f"[mín, {round(p25,5)})"
+            intervalo_q2 = f"[{round(p25,2)}, {round(p50,5)})"
+            intervalo_q3 = f"[{round(p50,2)}, {round(p75,5)})"
+            intervalo_q4 = f"[{round(p75,5)}, máx]"
 
             if not invertir:
                 normales.append({
