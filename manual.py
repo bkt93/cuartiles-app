@@ -76,6 +76,7 @@ def mostrar_manual():
     st.markdown("""- Comparar rendimiento en base a cuartiles""")
     st.markdown("""- Entender rangos de desempeño""")
     st.markdown("""- Aplicar filtros y generar reportes claros""")
+    st.markdown("""- También permite obtener el valor del cuartil a partir de una medida aritmética""")
     st.markdown("""""")
     st.markdown("""💡 Recordá que las filas que comienzan con **"Total"** se ignoran automáticamente en los cálculos.""")
     st.markdown("""""")
