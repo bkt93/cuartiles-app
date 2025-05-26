@@ -1,113 +1,81 @@
 import streamlit as st
 
 def mostrar_manual():
-    st.markdown("""
-## 📘 Manual - Cómo usar esta herramienta
-
-### 📊 ¿Qué hace esta herramienta?
-Este asignador de cuartiles permite subir un archivo Excel con datos numéricos y asignar cuartiles automáticos a distintas métricas. También permite **agregar filas de resumen** con sumatorias o promedios seleccionados.
-
----
-
-### ✅ ¿Qué necesito?
-1. Un archivo **.xlsx** que contenga:
-   - Columnas con **datos numéricos** (ej: NPS, SAT, Ventas, TMO).
-   - Opcionalmente, columnas identificadoras (como nombre del asesor o líder).
-
----
-
-### 🧩 ¿Cómo funciona?
-- Seleccionás una o más **columnas identificadoras** (por ejemplo, Asesor y Líder).
-- Luego hay **2 grupos** para cuartilizar métricas:
-  - En cada grupo seleccionás **una o más columnas numéricas**.
-  - Podés marcar si querés que **Q1 represente valores altos** (por ejemplo, NPS, SAT).
-  - Si no marcás nada, se asume que **Q4 representa valores altos** (ej: TMO, TOL).
-
----
-
-### 🧮 ¿Qué son las filas de resumen?
-Antes de calcular, podés configurar **dos filas de resumen**:
-
-- En cada fila:
-  - Elegís columnas numéricas para resumir.
-  - Elegís si querés mostrar su **Promedio** o **Sumatoria**.
-- Estas filas se agregarán automáticamente al final del Excel exportado.
-- Aparecen con fondo rojo y fuente en negrita.
-- El nombre de la fila indica el tipo: `Promedio` o `Sumatoria`.
-
----
-
-### 📈 ¿Qué hace el botón 'Calcular Cuartiles'?
-Cuando presionás este botón:
-
-1. Se procesan los dos grupos de métricas.
-2. Para cada métrica, se agregan **dos columnas nuevas**:
-   - `🟢 _Cuartil`: indica si el valor está en Q1, Q2, Q3 o Q4.
-   - `🟡 _Intervalo`: muestra el rango de cada cuartil.
-3. Se agregan las **filas de resumen** que configuraste.
-4. Podés **descargar el Excel** completo con los resultados.
-
----
-
-### 🔍 ¿Qué significan los cuartiles e intervalos?
-Los intervalos se generan automáticamente dividiendo los datos en 4 partes iguales. Por ejemplo:
-
-- **Q1 →** `[mín, 424.25)` → Los valores más bajos (25%)
-- **Q2 →** `[424.25, 498.76)`
-- **Q3 →** `[498.76, 570.01)`
-- **Q4 →** `[570.01, máx]` → Los valores más altos (25%)
-
----
-
-### 📐 ¿Cómo se calculan los cuartiles?
-- Se utiliza el método `PERCENTIL.EXC` como en Excel.
-- Se excluyen los extremos (0% y 100%) para mayor precisión.
-- Se implementa con `np.percentile(..., method="linear")`.
-
----
-
-### 📥 ¿Qué incluye el Excel descargado?
-1. **Hoja "Resultados"**:
-   - Datos con columnas cuartilizadas.
-   - Filas de resumen configuradas (Promedio / Sumatoria).
-   - Las filas de resumen están en **color rojo** para identificarlas fácilmente.
-
-2. **Hoja "Intervalos"**:
-   - Tabla con los rangos utilizados para cada cuartil.
-   - Se muestran tanto métricas estándar como invertidas.
-
----
-
-### 📄 ¿Cómo interpretar la hoja "Intervalos"?
-
-🟦 Métricas estándar (Q4 = valores altos):
-
-| Métrica | Q1             | Q2                | Q3                | Q4             |
-| ------- | -------------- | ----------------- | ----------------- | -------------- |
-| Tol     | \[mín, 424.25) | \[424.25, 502.0)  | \[502.0, 564.75)  | \[564.75, máx] |
-| Tmo     | \[mín, 429.58) | \[429.58, 521.69) | \[521.69, 590.48) | \[590.48, máx] |
-
-🟩 Métricas invertidas (Q1 = valores altos, Q4 = valores bajos):
-
-| Métrica | Q1            | Q2              | Q3             | Q4           |
-| ------- | ------------- | --------------- | -------------- | ------------ |
-| Nps     | \[66.67, máx] | \[46.06, 66.67) | \[20.0, 46.06) | \[mín, 20.0) |
-| Sat     | \[9.81, máx]  | \[9.27, 9.81)   | \[8.18, 9.27)  | \[mín, 8.18) |
-
-💡 Esta tabla te permite interpretar rápidamente cómo se definieron los cuartiles para cada métrica.
-
----
-
-### ✨ Ejemplo de configuración sugerida
-
-- **Grupo 1:** TMO, TOL → (sin invertir)
-- **Grupo 2:** NPS, SAT → (invertido ✅)
-- **Resumen 1:** Promedio de TMO y TOL
-- **Resumen 2:** Sumatoria de llamadas
-
-Así podés:
-- Comparar métricas con escala homogénea.
-- Ver qué asesores están en qué cuartil.
-- Descargar un Excel listo para análisis o reportes.
-
-""")
+    st.markdown("""""")
+    st.markdown("""## 📘 Manual - Cómo usar esta herramienta""")
+    st.markdown("""""")
+    st.markdown("""### 📊 ¿Qué hace esta herramienta?""")
+    st.markdown("""Esta calculadora de cuartiles utiliza el método `PERCENTIL.EXC` (como en Excel) para dividir métricas numéricas en 4 grupos iguales. Permite:""")
+    st.markdown("""- Calcular cuartiles de forma automática sobre distintos indicadores.""")
+    st.markdown("""- Seleccionar **dos conjuntos de métricas que se cuartilizan de manera distinta** ).""")
+    st.markdown("""- Aplicar **cuartilizado inverso** para métricas como NPS, SAT o Ventas.""")
+    st.markdown("""- Agregar columnas con **intervalos numéricos** para interpretar mejor los valores.""")
+    st.markdown("""""")
+    st.markdown("""---""")
+    st.markdown("""""")
+    st.markdown("""### 🧑‍💻 ¿Cómo se utiliza?""")
+    st.markdown("""""")
+    st.markdown("""1. **Cargar el archivo Excel** exportado desde Power BI usando el botón **"📂 Browse files"**.""")
+    st.markdown("""2. **Seleccionar uno o más identificadores**, como:""")
+    st.markdown("""   - Asesor""")
+    st.markdown("""   - Líder""")
+    st.markdown("""   - Llamadas""")
+    st.markdown("""   Esto permitirá mantener la relación con la persona o entidad analizada.""")
+    st.markdown("""3. **Seleccionar el primer grupo de métricas** (por ejemplo: TMO, TOL).""")
+    st.markdown("""4. **Seleccionar el segundo grupo de métricas** (opcional). Marcar el checkbox si esas métricas deben tener cuartiles invertidos (ej: NPS, SAT, Ventas).""")
+    st.markdown("""5. Presionar el botón **"📈 Calcular cuartiles"**.""")
+    st.markdown("""6. Descargar el resultado con **"📥 Descargar Excel calculado"**.""")
+    st.markdown("""""")
+    st.markdown("""---""")
+    st.markdown("""""")
+    st.markdown("""### 📈 ¿Qué hace el botón 'Calcular cuartiles'?""")
+    st.markdown("""- Procesa cada grupo de métricas y genera:""")
+    st.markdown("""  - Columna `🔢 _Cuartil`: indica Q1, Q2, Q3 o Q4.""")
+    st.markdown("""  - Columna `📏 _Intervalo` (opcional): muestra el rango exacto al que pertenece cada valor.""")
+    st.markdown("""""")
+    st.markdown("""---""")
+    st.markdown("""""")
+    st.markdown("""### 📐 ¿Cómo se calculan los cuartiles?""")
+    st.markdown("""- Se usa el método `PERCENTIL.EXC` (como en Excel).""")
+    st.markdown("""- El cálculo divide los datos en cuartiles Q1 a Q4 excluyendo los extremos 0% y 100%.""")
+    st.markdown("""- Si se activa el modo **invertido**, los valores altos quedan en Q1 y los bajos en Q4.""")
+    st.markdown("""""")
+    st.markdown("""---""")
+    st.markdown("""""")
+    st.markdown("""### 🔍 ¿Qué significan los intervalos?""")
+    st.markdown("""Los cuartiles se definen como:""")
+    st.markdown("""""")
+    st.markdown("""- **Q1 →** `[mín, P25)` → 25% más bajo""")
+    st.markdown("""- **Q2 →** `[P25, P50)`""")
+    st.markdown("""- **Q3 →** `[P50, P75)`""")
+    st.markdown("""- **Q4 →** `[P75, máx]` → 25% más alto""")
+    st.markdown("""""")
+    st.markdown("""Si se invierte el sentido, se intercambian los significados de Q1 y Q4.""")
+    st.markdown("""""")
+    st.markdown("""---""")
+    st.markdown("""""")
+    st.markdown("""### 📄 ¿Qué incluye el Excel exportado?""")
+    st.markdown("""""")
+    st.markdown("""1. **Hoja "Resultados"**:""")
+    st.markdown("""   - Valores originales""")
+    st.markdown("""   - Cuartiles calculados""")
+    st.markdown("""   - Intervalos (si fueron activados)""")
+    st.markdown("""""")
+    st.markdown("""2. **Hoja "Intervalos"**:""")
+    st.markdown("""   - Muestra los valores de P25, P50 y P75 para cada métrica""")
+    st.markdown("""   - Ayuda a entender cómo se construyó cada cuartil""")
+    st.markdown("""""")
+    st.markdown("""---""")
+    st.markdown("""""")
+    st.markdown("""### 🧠 Ejemplo de configuración""")
+    st.markdown("""""")
+    st.markdown("""- **Grupo 1**: TMO, TOL (sin invertir)""")
+    st.markdown("""- **Grupo 2**: NPS, SAT (invertido ✅)""")
+    st.markdown("""""")
+    st.markdown("""Esto te permite:""")
+    st.markdown("""- Comparar rendimiento en base a cuartiles""")
+    st.markdown("""- Entender rangos de desempeño""")
+    st.markdown("""- Aplicar filtros y generar reportes claros""")
+    st.markdown("""""")
+    st.markdown("""💡 Recordá que las filas que comienzan con **"Total"** se ignoran automáticamente en los cálculos.""")
+    st.markdown("""""")

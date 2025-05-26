@@ -11,7 +11,8 @@ st.set_page_config(page_title="Cuartiles y totales", layout="wide")
 
 
 
-st.title("📊 Calculadora de cuartiles y totales")
+st.title("📊 Calculadora de cuartiles")
+st.info("📘 Antes de continuar, te recomendamos leer el manual para entender cómo funciona esta herramienta.")
 
 st.markdown("---")
 
@@ -24,6 +25,9 @@ num_calculo_totales = 2
 if archivo is not None:
     try:
         df = pd.read_excel(archivo)
+        # Eliminar filas "Total" que afectan el cálculo
+        df = df[~df.iloc[:, 0].astype(str).str.startswith("Total")]
+
         st.success("Archivo cargado correctamente.")
         #st.dataframe(df.head())
 
@@ -60,32 +64,6 @@ if archivo is not None:
                     value=False,
                     key=f"invertir_{i}",
                     help="Esta selección invierte el sentido de los cuartiles. Por defecto los Q4 están asignados a valores altos."
-                )
-
-
-
-        # 🟩 Bloque SIEMPRE visible de resumen
-
-        st.markdown("---")
-
-        st.info("⚠️ Para calcular totales, las columnas antes deben haber sido seleccionadas para cuartilizar. En caso de 'Llamadas' elegirla como identificador del colaborador.")
-
-        cols_totales = st.columns(2)  # Creamos 2 columnas de ancho igual
-
-        for i in range(num_calculo_totales):
-            with cols_totales[i % 2]:  # Alternamos entre la izquierda (0) y la derecha (1)
-                st.markdown(f"### 🧮 Añadir fila de totales #{i + 1}")
-
-                resumen_columnas = st.multiselect(
-                    f"Seleccioná columnas para totales #{i + 1}",
-                    columnas_numericas,
-                    key=f"resumen_cols_selector_{i}"
-                )
-
-                tipo_resumen = st.radio(
-                    "Tipo de resumen:",
-                    ["Promedio", "Sumatoria"],
-                    key=f"resumen_tipo_selector_{i}"
                 )
 
 
@@ -134,26 +112,7 @@ if archivo is not None:
                         df_resultado[f"{col}_Intervalo"] = df[col].apply(intervalo)
 
 
-            # Añadir múltiples filas de resumen
-            for i in range(num_calculo_totales):
-                resumen_columnas = st.session_state.get(f"resumen_cols_selector_{i}", [])
-                tipo_resumen = st.session_state.get(f"resumen_tipo_selector_{i}", "Promedio")
-
-                if resumen_columnas:
-                    resumen = {}
-                    for col in resumen_columnas:
-                        if tipo_resumen == "Promedio":
-                            resumen[col] = round(df[col].mean(), 2)
-                        else:
-                            resumen[col] = round(df[col].sum(), 2)
-                    
-                    fila_resumen = {col: resumen.get(col, "") for col in df_resultado.columns}
-                    df_resultado.loc[f"{tipo_resumen}"] = fila_resumen
-
-
             st.success("✅ Cuartiles generados para todos los conjuntos.")
-            #st.dataframe(df_resultado)
-            #  mostrar_resumen_en_pantalla(df_resultado)
             df_intervalos = construir_tabla_intervalos(df, num_grupos)
 
             # Exportar a Excel
@@ -165,17 +124,6 @@ if archivo is not None:
                 workbook = writer.book
                 worksheet = writer.sheets["Resultados"]
 
-                # Estilo rojo
-                red_fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")
-                bold_font = Font(bold=True)
-
-                # Buscar filas que contienen "Resumen" (ignorar encabezado)
-                for row_idx, row in enumerate(df_resultado.itertuples(), start=2):
-                    if str(row.Index).startswith("Promedio") or str(row.Index).startswith("Sumatoria"):
-                        for col_idx in range(1, len(df_resultado.columns) + 1):
-                            cell = worksheet.cell(row=row_idx, column=col_idx)
-                            cell.fill = red_fill
-                            cell.font = bold_font
             st.download_button(
                 label="📥 Descargar Excel calculado",
                 data=buffer.getvalue(),
