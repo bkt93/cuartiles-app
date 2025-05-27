@@ -22,7 +22,7 @@ def construir_tabla_intervalos(df, num_grupos):
             media_q1 = round(np.mean(valores[valores < p25]), 2)
             media_q2 = round(np.mean(valores[(valores >= p25) & (valores < p50)]), 2)
             media_q3 = round(np.mean(valores[(valores >= p50) & (valores < p75)]), 2)
-            media_q4 = round(np.mean(valores[valores >= p75]), 2)
+            media_q4 = round(np.mean(valores[valores >= p75]), 3)
 
             # Intervalos reales
             intervalo_q1 = f"[{vmin}, {round(p25, 5)})"

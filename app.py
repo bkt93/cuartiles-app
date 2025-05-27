@@ -82,7 +82,7 @@ if archivo is not None:
                 for col in columnas:
                     valores = df[col].dropna()
                     p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
-                    col_red = df[col].round(2)
+                    col_red = df[col].round(5)
 
                     def clasificar(v):
                         if pd.isna(v): return None
