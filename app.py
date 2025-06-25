@@ -66,6 +66,14 @@ if archivo is not None:
                     help="Esta selección invierte el sentido de los cuartiles. Por defecto los Q4 están asignados a valores altos."
                 )
 
+                
+                st.checkbox(
+                    "🎯 Asignar Q4 automáticamente a valores cero (y excluirlos del cálculo)",
+                    value=False,
+                    key=f"excluir_ceros_{i}",
+                    help="Los valores cero se asignarán como Q4 (o Q1 si no invertís). El cuartilizado se hará sin incluir ceros."
+                )
+
 
         st.markdown("---")
 
@@ -80,24 +88,39 @@ if archivo is not None:
                 invertir = st.session_state.get(f"invertir_{i}", False)
 
                 for col in columnas:
-                    valores = df[col].dropna()
-                    p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
                     col_red = df[col].round(5)
+                    invertir = st.session_state.get(f"invertir_{i}", False)
+                    excluir_ceros = st.session_state.get(f"excluir_ceros_{i}", False)
 
+                    # Filtrar los valores a cuartilizar (excluyendo ceros si corresponde)
+                    valores_para_cuartilizar = col_red[col_red > 0] if excluir_ceros else col_red.dropna()
+
+                    # Cálculo de cuartiles sobre el subconjunto elegido
+                    if len(valores_para_cuartilizar) >= 4:
+                        p25, p50, p75 = np.percentile(valores_para_cuartilizar, [25, 50, 75], method="linear")
+                    else:
+                        p25 = p50 = p75 = 0  # fallback seguro para evitar errores
+
+                    # Clasificación por cuartil
                     def clasificar(v):
-                        if pd.isna(v): return None
-                        if v >= p75: return "Q4"
-                        elif v >= p50: return "Q3"
-                        elif v >= p25: return "Q2"
-                        else: return "Q1"
+                        if pd.isna(v):
+                            return None
+                        if excluir_ceros and v == 0:
+                            return "Q4" if invertir else "Q1"
+                        if not invertir:
+                            if v >= p75: return "Q4"
+                            elif v >= p50: return "Q3"
+                            elif v >= p25: return "Q2"
+                            else: return "Q1"
+                        else:
+                            if v <= p25: return "Q4"
+                            elif v <= p50: return "Q3"
+                            elif v <= p75: return "Q2"
+                            else: return "Q1"
 
                     cuartil = col_red.apply(clasificar)
 
-                    if invertir:
-                        cuartil = cuartil.replace({
-                            "Q1": "Q4", "Q2": "Q3", "Q3": "Q2", "Q4": "Q1"
-                        })
-
+                    # Intervalos opcionales
                     def intervalo(v):
                         if pd.isna(v): return None
                         if v >= p75: return f"[{round(p75,5)}, máx]"
@@ -105,11 +128,12 @@ if archivo is not None:
                         elif v >= p25: return f"[{round(p25,5)}, {round(p50,5)})"
                         else: return f"[mín, {round(p25,5)})"
 
-
+                    # Agregar al DataFrame final
                     df_resultado[col] = col_red
                     df_resultado[f"{col}_Cuartil"] = cuartil
                     if incluir_intervalos:
                         df_resultado[f"{col}_Intervalo"] = df[col].apply(intervalo)
+
 
 
             st.success("✅ Cuartiles generados para todos los conjuntos.")

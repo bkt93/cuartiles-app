@@ -9,22 +9,27 @@ def construir_tabla_intervalos(df, num_grupos):
     for i in range(num_grupos):
         columnas = st.session_state.get(f"colnum_{i}", [])
         invertir = st.session_state.get(f"invertir_{i}", False)
+        excluir_ceros = st.session_state.get(f"excluir_ceros_{i}", False)
 
         for col in columnas:
-            valores = df[col].dropna()
+            col_red = df[col].round(5)
+
+            # Aplicar filtro si se solicitó excluir ceros
+            valores = col_red[col_red > 0] if excluir_ceros else col_red.dropna()
             if len(valores) == 0:
                 continue
 
+            # Cálculo de percentiles
             p25, p50, p75 = np.percentile(valores, [25, 50, 75], method="linear")
             vmin, vmax = round(valores.min(), 5), round(valores.max(), 5)
 
             # Medias por cuartil
-            media_q1 = round(np.mean(valores[valores < p25]), 2)
-            media_q2 = round(np.mean(valores[(valores >= p25) & (valores < p50)]), 2)
-            media_q3 = round(np.mean(valores[(valores >= p50) & (valores < p75)]), 2)
-            media_q4 = round(np.mean(valores[valores >= p75]), 3)
+            media_q1 = round(np.mean(valores[valores < p25]), 5)
+            media_q2 = round(np.mean(valores[(valores >= p25) & (valores < p50)]), 5)
+            media_q3 = round(np.mean(valores[(valores >= p50) & (valores < p75)]), 5)
+            media_q4 = round(np.mean(valores[valores >= p75]), 5)
 
-            # Intervalos reales
+            # Intervalos de texto
             intervalo_q1 = f"[{vmin}, {round(p25, 5)})"
             intervalo_q2 = f"[{round(p25, 5)}, {round(p50, 5)})"
             intervalo_q3 = f"[{round(p50, 5)}, {round(p75, 5)})"
@@ -58,6 +63,7 @@ def construir_tabla_intervalos(df, num_grupos):
     df_normales = pd.DataFrame(normales)
     df_invertidas = pd.DataFrame(invertidas)
 
+    # Separador visual si hay ambas
     if not df_normales.empty and not df_invertidas.empty:
         df_normales = pd.concat(
             [df_normales, pd.DataFrame([[""] * len(df_normales.columns)], columns=df_normales.columns)]
