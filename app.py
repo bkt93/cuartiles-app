@@ -95,28 +95,32 @@ if archivo is not None:
                     # Filtrar los valores a cuartilizar (excluyendo ceros si corresponde)
                     valores_para_cuartilizar = col_red[col_red > 0] if excluir_ceros else col_red.dropna()
 
-                    # Cálculo de cuartiles sobre el subconjunto elegido
+                    # Cálculo de cuartiles y extremos sobre el subconjunto elegido
                     if len(valores_para_cuartilizar) >= 4:
                         p25, p50, p75 = np.percentile(valores_para_cuartilizar, [25, 50, 75], method="linear")
+                        vmin, vmax = round(valores_para_cuartilizar.min(), 5), round(valores_para_cuartilizar.max(), 5)
                     else:
-                        p25 = p50 = p75 = 0  # fallback seguro para evitar errores
+                        p25 = p50 = p75 = vmin = vmax = 0  # fallback seguro
 
                     # Clasificación por cuartil
                     def clasificar(v):
                         if pd.isna(v):
                             return None
                         if excluir_ceros and v == 0:
-                            return "Q4" if invertir else "Q1"
-                        if not invertir:
-                            if v >= p75: return "Q4"
-                            elif v >= p50: return "Q3"
-                            elif v >= p25: return "Q2"
-                            else: return "Q1"
+                            return "Q1" if invertir else "Q4"
+                        if invertir:
+                            # Q1 a valores altos
+                            if np.isclose(v, vmax) or v >= p75: return "Q1"
+                            elif v >= p50: return "Q2"
+                            elif v >= p25: return "Q3"
+                            else: return "Q4"
                         else:
-                            if v <= p25: return "Q4"
-                            elif v <= p50: return "Q3"
-                            elif v <= p75: return "Q2"
-                            else: return "Q1"
+                            # Q1 a valores bajos (default)
+                            if np.isclose(v, vmin) or v <= p25: return "Q1"
+                            elif v <= p50: return "Q2"
+                            elif v <= p75: return "Q3"
+                            else: return "Q4"
+
 
                     cuartil = col_red.apply(clasificar)
 
